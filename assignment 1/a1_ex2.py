@@ -7,7 +7,7 @@ from PIL import Image
 
 _valid_extensions = ['.jpg', '.JPG', '.jpeg', '.JPEG']
 _valid_image_modes = ['RGB', 'L']
-_max_file_size = 250_000
+_max_file_size = 250_000 # in bytes
 
 
 def _scan_dir_0(dir: str, file_paths: list[str]) -> None:
@@ -20,10 +20,10 @@ def _scan_dir_0(dir: str, file_paths: list[str]) -> None:
 
 def _scan_dir(dir: str) -> list[str]:
     """
-    Scans {dir} directory recursively and searches for files.
+    Scans ``dir`` directory recursively and searches for files.
 
-    :param dir: Directory where files are recursively scanned
-    :raises ValueError: If dir is not an existing directory
+    :param dir: Relative or absolute path to the directory
+    :raises ValueError: If ``dir`` is a path to a nonexistent directory
     :return: A list of strings representing files' absolute paths
     """
     file_paths = []
@@ -34,6 +34,11 @@ def _scan_dir(dir: str) -> list[str]:
 
 
 def _is_image_variance_valid(image: Image.Image) -> bool:
+    """
+    Checks whether the ``image`` is not a solid colour.
+    
+    :param image: image (object of type ``PIL.Image.Image``) to be checked
+    """
     r_channel = list(image.getdata(0))
     r_channel_var = (max(r_channel) - min(r_channel))
     b_channel = list(image.getdata(1))
@@ -46,40 +51,38 @@ def _is_image_variance_valid(image: Image.Image) -> bool:
 def validate_images(input_dir: str, output_dir: str,
                     log_file: str, formatter: str = '07d') -> None:
     """
-        Validates images, copies valid images into the {output_dir} directory and
-        then gives the copied images names based on {formatter}. It also writes
-        logs into {log_file} about invalid images and creates "labels.csv" file
-        in {output_dir} directory with image files' names and the corresponding
-        labels. 
+    Validates images, copies valid images into the ``output_dir`` directory and
+    then gives names to the copied images based on ``formatter``. It also writes
+    logs into ``log_file`` about invalid images and creates ``labels.csv`` file
+    in ``output_dir`` directory with image files' names and the corresponding
+    labels. 
 
-        Validation bases on the following rules:
-                1. The file name ends with .jpg, .JPG, .jpeg or .JPEG.
-                2. The file size does not exceed 250kB (=250 000 Bytes).
-                3. The file can be read as image (i.e., the PIL/pillow module does not raise an exception
-                when reading the file).
-                4. The image data has a shape of (H, W, 3) with H (height) and W (width) larger than or
-                equal to 100 pixels, and the three channels must be in the order RGB (red, green, blue).
-                Alternatively, the image can also be grayscale and have a shape of only (H, W) with the
-                same width and height restrictions.
-                5. The image data has a variance larger than 0, i.e., there is not just one common pixel in
-                the image data.
-                6. The same image has not been copied already.
+    The validation bases on the following rules:
+        1. The file name ends with .jpg, .JPG, .jpeg or .JPEG.
+        2. The file size does not exceed 250kB (=250 000 Bytes).
+        3. The file can be read as image (i.e., the PIL/pillow module does not raise an exception
+           when reading the file).
+        4. The image data has a shape of (H, W, 3) with H (height) and W (width) larger than or
+           equal to 100 pixels, and the three channels must be in the order RGB (red, green, blue).
+           Alternatively, the image can also be grayscale and have a shape of only (H, W) with the
+           same width and height restrictions.
+        5. The image data has a variance larger than 0, i.e., there is not just one common pixel in
+           the image data.
+        6. The same image has not been copied already.
 
-    :param input_dir: Input directory where images are looked for recursively.
-    :param output_dir: Output directory where all valide images are copied to
-                and labels.csv file is created. If the specified file or intermediate
-                directories do not exist, they are created automatically.
-    :param log_file: Path to the log file. If the specified file or
-        intermediate directories do not exist, they will be created
-        automatically. In case file exist, it will be truncated.
+    :param input_dir: Relative or absolute path to the directory where images
+        will be looked for recursively.
+    :param output_dir: Relative or absolute path to the directory where all
+        valide images will be copied to and ``labels.csv`` file will be created.
+        If intermediate directories do not exist, they will be created
+        automatically.
+    :param log_file: Relative or absolute path to a log file. If the specified
+        file or intermediate directories do not exist, they will be created
+        automatically. In case the ``log_file`` exists, it will be rewritten.
     :param formatter: optional format string used when writing the base names
-                of the output validated images. For '07d', images' names will look
-                like this: "000000{i}.jpg", where {i} is some index.
-    :raises ValueError:
-                - If input_dir is a path to a directory that
-                does not exist, or;
-                - If log_file is a path to an existing directory
-                - If labels.csv is an existing directory inside output_dir
+        of the output valid images. For ``07d``, images' names will look
+        like this: ``0000001.jpg``, ``0000002.jpg``, ``0000010.jpg``, etc.
+    :raises ValueError: If ``input_dir`` is a path to a nonexistent directory.
     """
     file_paths = sorted(_scan_dir(input_dir))
 
@@ -120,7 +123,7 @@ def validate_images(input_dir: str, output_dir: str,
             if not _is_image_variance_valid(image):
                 log_f.write(f'{file_name},5\n')
                 continue
-			
+            
             image_hash = hash(tuple(image.getdata()))
             if image_hash in image_hashes:
                 log_f.write(f'{file_name},6\n')
@@ -135,4 +138,3 @@ def validate_images(input_dir: str, output_dir: str,
 
             image_hashes.add(image_hash)
 
-validate_images('./exifless', './output', './log_file.log')
