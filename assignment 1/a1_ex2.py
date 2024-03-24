@@ -10,27 +10,19 @@ _valid_image_modes = ['RGB', 'L']
 _max_file_size = 250_000 # in bytes
 
 
-def _scan_dir_0(dir: str, file_paths: list[str]) -> None:
+def _scan_dir(dir: str, file_paths: list[str]) -> None:
+    """
+    Scans ``dir`` directory recursively and searches for files.
+
+    :param dir: Relative or absolute path to the directory.
+    :param file_paths: An empty list where the strings representing files'
+        absolute paths will be appended to.
+    """
     for file in os.scandir(dir):
         if file.is_file():
             file_paths.append(os.path.abspath(file.path))
         else:
-            _scan_dir_0(file.path, file_paths)
-
-
-def _scan_dir(dir: str) -> list[str]:
-    """
-    Scans ``dir`` directory recursively and searches for files.
-
-    :param dir: Relative or absolute path to the directory
-    :raises ValueError: If ``dir`` is a path to a nonexistent directory
-    :return: A list of strings representing files' absolute paths
-    """
-    file_paths = []
-    if not os.path.isdir(dir):
-        raise ValueError(f'{dir} is not an existing directory')
-    _scan_dir_0(dir, file_paths)
-    return file_paths
+            _scan_dir(file.path, file_paths)
 
 
 def _is_image_variance_valid(image: Image.Image) -> bool:
@@ -84,7 +76,11 @@ def validate_images(input_dir: str, output_dir: str,
         like this: ``0000001.jpg``, ``0000002.jpg``, ``0000010.jpg``, etc.
     :raises ValueError: If ``input_dir`` is a path to a nonexistent directory.
     """
-    file_paths = sorted(_scan_dir(input_dir))
+    file_paths = []
+    if not os.path.isdir(input_dir):
+        raise ValueError(f'input_dir is not an existing directory')
+    _scan_dir(input_dir, file_paths)
+    file_paths = sorted(file_paths)
 
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(os.path.split(log_file)[0], exist_ok=True)
