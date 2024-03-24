@@ -41,7 +41,7 @@ def _is_image_variance_valid(image: Image.Image) -> bool:
 
 
 def validate_images(input_dir: str, output_dir: str,
-                    log_file: str, formatter: str = '07d') -> None:
+                    log_file: str, formatter: str = '07d') -> int:
     """
     Validates images, copies valid images into the ``output_dir`` directory and
     then gives names to the copied images based on ``formatter``. It also writes
@@ -75,6 +75,7 @@ def validate_images(input_dir: str, output_dir: str,
         of the output valid images. For ``07d``, images' names will look
         like this: ``0000001.jpg``, ``0000002.jpg``, ``0000010.jpg``, etc.
     :raises ValueError: If ``input_dir`` is a path to a nonexistent directory.
+    :return: number of valid copied images
     """
     file_paths = []
     if not os.path.isdir(input_dir):
@@ -133,4 +134,6 @@ def validate_images(input_dir: str, output_dir: str,
             shutil.copy(file_path, os.path.join(output_dir, formatted_name))
 
             image_hashes.add(image_hash)
+
+    return len(image_hashes)
 
