@@ -2,6 +2,13 @@ import numpy as np
 
 
 def to_grayscale(pil_image: np.ndarray) -> np.ndarray:
+    """
+    Converts ``pil_image`` to grayscale using the colorimetric conversion.
+
+    :param pil_image: the raw data of an image loaded with Pillow (PIL)
+    :return: grayscaled image as ``np.ndarray`` shaped as (1, H, W), where W is
+        the width and H is the height of the image.
+    """
     if pil_image.ndim == 2:
         return pil_image.reshape((1, pil_image.shape[0], pil_image.shape[1]))
     if pil_image.ndim != 3:
