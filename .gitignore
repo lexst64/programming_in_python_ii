@@ -7,6 +7,9 @@ reduced
 # not my code
 assignment 1/utils/reduce_image_sizes.py
 
+# don't include zip files
+*.zip
+
 # don't include datasets
 datasets/
 
