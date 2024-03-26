@@ -1,34 +1,54 @@
 import numpy as np
 
 
-def _pad_image(image: np.ndarray, pad_width: int, axis: str) -> np.ndarray:
+def _pad_image(image: np.ndarray, pad_widths: tuple[int, int], axis: str) -> np.ndarray:
     if axis == 'x':
-        axis_pad = ((0, 0), (0, 0), (pad_width, pad_width))
+        # pixels to add to x axis
+        axis_pad = ((0, 0), (0, 0), pad_widths)
     elif axis == 'y':
-        axis_pad = ((0, 0), (pad_width, pad_width), (0, 0))
+        # pixels to add to y axis
+        axis_pad = ((0, 0), pad_widths, (0, 0))
     else:
         raise ValueError('axis should be either x or y')
     
     return np.pad(image.copy(), axis_pad, mode='edge')
 
 
-def _crop_image(image: np.ndarray, crop_width: int, axis: str) -> np.ndarray:
+def _crop_image(image: np.ndarray, crop_widths: tuple[int, int], axis: str) -> np.ndarray:
     if axis == 'x':
         # indexes of the elements to delete from x axis
         indexes = (
-            list(range(0, crop_width + 1))
-            + list(range(image.shape[2] - crop_width, image.shape[2]))
+            list(range(0, crop_widths[0]))
+            + list(range(image.shape[2] - crop_widths[1], image.shape[2]))
         )
     elif axis == 'y':
         # indexes of the elements to delete from y axis
         indexes = (
-            list(range(0, crop_width + 1))
-            + list(range(image.shape[1] - crop_width, image.shape[1]))
+            list(range(0, crop_widths[0]))
+            + list(range(image.shape[1] - crop_widths[1], image.shape[1]))
         )
     else:
         raise ValueError('axis should be either x or y')
     
     return np.delete(image.copy(), indexes, axis=(2 if axis == 'x' else 1))
+
+
+def _calc_pad_widths(init_length: int , dist_length: int) -> tuple[int, int]:
+    # additional 1px padding in case total number of pixels to add is odd
+    add_pad = 1 if (dist_length - init_length) % 2 != 0 else 0
+    return (
+        (dist_length - init_length) // 2,
+        (dist_length - init_length) // 2 + add_pad,
+    )
+
+
+def _calc_crop_widths(init_length: int, dist_length: int) -> tuple[int, int]:
+    # 1px to subtract in case total number of pixels to subtract is odd
+    subtract_crop = 1 if (init_length - dist_length) % 2 != 0 else 0
+    return (
+        (init_length - dist_length) // 2,
+        (init_length - dist_length) // 2 + subtract_crop,
+    )
 
 
 def _resize_image(image: np.ndarray, width: int, height: int) -> np.ndarray:
@@ -37,14 +57,18 @@ def _resize_image(image: np.ndarray, width: int, height: int) -> np.ndarray:
     image_height = image.shape[1]
 
     if width > image_width:
-        res_image = _pad_image(res_image, (width - image_width) // 2, axis='x')
+        pad_widths = _calc_pad_widths(image_width, width)
+        res_image = _pad_image(res_image, pad_widths, axis='x')
     elif width < image_width:
-        res_image = _crop_image(res_image, (image_width - width) // 2, axis='x')
+        crop_widths = _calc_crop_widths(image_width, width)
+        res_image = _crop_image(res_image, crop_widths, axis='x')
     
     if height > image_height:
-        res_image = _pad_image(res_image, (height - image_height) // 2, axis='y')
+        pad_widths = _calc_pad_widths(image_height, height)
+        res_image = _pad_image(res_image, pad_widths, axis='y')
     elif height < image_height:
-        res_image = _crop_image(res_image, (image_height - height) // 2, axis='y')
+        crop_widths = _calc_crop_widths(image_height, height)
+        res_image = _crop_image(res_image, crop_widths, axis='y')
 
     return res_image
 
