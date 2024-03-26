@@ -76,8 +76,8 @@ def _resize_image(image: np.ndarray, width: int, height: int) -> np.ndarray:
 def _subarea_image(image: np.ndarray, x: int, y: int, size: int) -> np.ndarray:
     sub_image = image.copy()
     
-    x_indexes = list(range(0, x)) + list(range(x + size + 1, image.shape[2]))
-    y_indexes = list(range(0, y)) + list(range(y + size + 1, image.shape[1]))
+    x_indexes = list(range(0, x)) + list(range(x + size, image.shape[2]))
+    y_indexes = list(range(0, y)) + list(range(y + size, image.shape[1]))
     
     sub_image = np.delete(sub_image, x_indexes, axis=2)
     sub_image = np.delete(sub_image, y_indexes, axis=1)
