@@ -10,7 +10,7 @@ def _pad_image(image: np.ndarray, pad_widths: tuple[int, int], axis: str) -> np.
         axis_pad = ((0, 0), pad_widths, (0, 0))
     else:
         raise ValueError('axis should be either x or y')
-    
+
     return np.pad(image.copy(), axis_pad, mode='edge')
 
 
@@ -29,25 +29,27 @@ def _crop_image(image: np.ndarray, crop_widths: tuple[int, int], axis: str) -> n
         )
     else:
         raise ValueError('axis should be either x or y')
-    
+
     return np.delete(image.copy(), indexes, axis=(2 if axis == 'x' else 1))
 
 
-def _calc_pad_widths(init_length: int , dist_length: int) -> tuple[int, int]:
-    # additional 1px padding in case total number of pixels to add is odd
-    add_pad = 1 if (dist_length - init_length) % 2 != 0 else 0
+def _calc_pad_widths(init_length: int, dist_length: int) -> tuple[int, int]:
+    add_pixel = 1 if (dist_length - init_length) % 2 != 0 else 0
     return (
         (dist_length - init_length) // 2,
-        (dist_length - init_length) // 2 + add_pad,
+        # pad 1 px more at the end of the dimension in case the total
+        # number of pixels to pad is odd
+        (dist_length - init_length) // 2 + add_pixel,
     )
 
 
 def _calc_crop_widths(init_length: int, dist_length: int) -> tuple[int, int]:
-    # 1px to subtract in case total number of pixels to subtract is odd
-    subtract_crop = 1 if (init_length - dist_length) % 2 != 0 else 0
+    add_pixel = 1 if (init_length - dist_length) % 2 != 0 else 0
     return (
+        # cut 1 px more at the beginning of the dimension in case the total
+        # number of pixels to cut is odd
+        (init_length - dist_length) // 2 + add_pixel,
         (init_length - dist_length) // 2,
-        (init_length - dist_length) // 2 + subtract_crop,
     )
 
 
@@ -62,7 +64,7 @@ def _resize_image(image: np.ndarray, width: int, height: int) -> np.ndarray:
     elif width < image_width:
         crop_widths = _calc_crop_widths(image_width, width)
         res_image = _crop_image(res_image, crop_widths, axis='x')
-    
+
     if height > image_height:
         pad_widths = _calc_pad_widths(image_height, height)
         res_image = _pad_image(res_image, pad_widths, axis='y')
@@ -75,13 +77,13 @@ def _resize_image(image: np.ndarray, width: int, height: int) -> np.ndarray:
 
 def _subarea_image(image: np.ndarray, x: int, y: int, size: int) -> np.ndarray:
     sub_image = image.copy()
-    
+
     x_indexes = list(range(0, x)) + list(range(x + size, image.shape[2]))
     y_indexes = list(range(0, y)) + list(range(y + size, image.shape[1]))
-    
+
     sub_image = np.delete(sub_image, x_indexes, axis=2)
     sub_image = np.delete(sub_image, y_indexes, axis=1)
-    
+
     return sub_image
 
 
@@ -128,9 +130,8 @@ def prepare_image(image: np.ndarray,
         raise ValueError(
             'the subarea should not exceed the resized image width and height'
         )
-    
+
     return (
         _resize_image(image, width, height),
         _subarea_image(image, x, y, size)
     )
-
