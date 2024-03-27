@@ -131,7 +131,7 @@ def prepare_image(image: np.ndarray,
             'the subarea should not exceed the resized image width and height'
         )
 
-    return (
-        _resize_image(image, width, height),
-        _subarea_image(image, x, y, size)
-    )
+    resized_image = _resize_image(image, width, height)
+    subarea = _subarea_image(resized_image, x, y, size)
+
+    return (resized_image, subarea)
