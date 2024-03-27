@@ -102,14 +102,19 @@ def prepare_image(image: np.ndarray,
 
     :param image: 3D NumPy ``ndarray`` with shape (1, H, W) (H and W are height
     and width, respectively) that contains a grayscale image.
-    :param width: the width of the resulting image.
-    :param height: the height of the resulting image.
-    :param x: the x-coordinate within resized_image where the subarea
+    :param width: the width of the resized image.
+    :param height: the height of the resized image.
+    :param x: the x-coordinate within the resized image where the subarea
         should start.
-    :param y: the y-coordinate within resized_image where the subarea
+    :param y: the y-coordinate within the resized image where the subarea
         should start.
     :param size: the size in both dimensions of the cropped subarea.
-    :raises: 
+    :raises ValueError:
+		- if ``image`` does not have exactly 3 dimensions;
+		- if ``image``'s channel size is not exactly 1;
+		- if ``width``, ``height`` or ``size`` are less than 32;
+		- if ``x`` or ``y`` are negative;
+		- if the subarea exceeds the resized image's width and height.
     :return: a tuple of:
         1.) a 3D NumPy ``ndarray`` of (1, ``height``, ``width``) shape that
             represents the resized copied version of ``image``. It has the same
