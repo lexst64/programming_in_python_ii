@@ -1,17 +1,12 @@
-# photos
+# extra
 exifless
 output
 photos
 reduced
-
-# not my code
 assignment_1/utils/reduce_image_sizes.py
-
-# don't include zip files
 *.zip
-
-# don't include tiff files
 *.tiff
+.virtual_documents
 
 # don't include datasets
 datasets/
@@ -126,6 +121,3 @@ venv.bak/
 .mypy_cache/
 .env/
 __pycache__/
-
-# extra
-.virtual_documents
