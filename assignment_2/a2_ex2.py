@@ -1,12 +1,11 @@
+import math
 import numpy as np
 
 
 def _pad_image(image: np.ndarray, pad_widths: tuple[int, int], axis: str) -> np.ndarray:
     if axis == 'x':
-        # pixels to add to x axis
         axis_pad = ((0, 0), (0, 0), pad_widths)
     elif axis == 'y':
-        # pixels to add to y axis
         axis_pad = ((0, 0), pad_widths, (0, 0))
     else:
         raise ValueError('axis should be either x or y')
@@ -16,40 +15,28 @@ def _pad_image(image: np.ndarray, pad_widths: tuple[int, int], axis: str) -> np.
 
 def _crop_image(image: np.ndarray, crop_widths: tuple[int, int], axis: str) -> np.ndarray:
     if axis == 'x':
-        # indexes of the elements to delete from x axis
-        indexes = (
-            list(range(0, crop_widths[0]))
-            + list(range(image.shape[2] - crop_widths[1], image.shape[2]))
-        )
+        return image[:, :, crop_widths[0]:-crop_widths[1]]
     elif axis == 'y':
-        # indexes of the elements to delete from y axis
-        indexes = (
-            list(range(0, crop_widths[0]))
-            + list(range(image.shape[1] - crop_widths[1], image.shape[1]))
-        )
+        return image[:, crop_widths[0]:-crop_widths[1], :]
     else:
         raise ValueError('axis should be either x or y')
 
-    return np.delete(image.copy(), indexes, axis=(2 if axis == 'x' else 1))
-
 
 def _calc_pad_widths(init_length: int, dist_length: int) -> tuple[int, int]:
-    add_pixel = 1 if (dist_length - init_length) % 2 != 0 else 0
     return (
-        (dist_length - init_length) // 2,
+        int(math.floor((dist_length - init_length) / 2)),
         # pad 1 px more at the end of the dimension in case the total
         # number of pixels to pad is odd
-        (dist_length - init_length) // 2 + add_pixel,
+        int(math.ceil((dist_length - init_length) / 2)),
     )
 
 
 def _calc_crop_widths(init_length: int, dist_length: int) -> tuple[int, int]:
-    add_pixel = 1 if (init_length - dist_length) % 2 != 0 else 0
     return (
         # cut 1 px more at the beginning of the dimension in case the total
         # number of pixels to cut is odd
-        (init_length - dist_length) // 2 + add_pixel,
-        (init_length - dist_length) // 2,
+        int(math.ceil((init_length - dist_length) / 2)),
+        int(math.floor((init_length - dist_length) / 2)),
     )
 
 
@@ -75,18 +62,6 @@ def _resize_image(image: np.ndarray, width: int, height: int) -> np.ndarray:
     return res_image
 
 
-def _subarea_image(image: np.ndarray, x: int, y: int, size: int) -> np.ndarray:
-    sub_image = image.copy()
-
-    x_indexes = list(range(0, x)) + list(range(x + size, image.shape[2]))
-    y_indexes = list(range(0, y)) + list(range(y + size, image.shape[1]))
-
-    sub_image = np.delete(sub_image, x_indexes, axis=2)
-    sub_image = np.delete(sub_image, y_indexes, axis=1)
-
-    return sub_image
-
-
 def prepare_image(image: np.ndarray,
                   width: int,
                   height: int,
@@ -110,11 +85,11 @@ def prepare_image(image: np.ndarray,
         should start.
     :param size: the size in both dimensions of the cropped subarea.
     :raises ValueError:
-		- if ``image`` does not have exactly 3 dimensions;
-		- if ``image``'s channel size is not exactly 1;
-		- if ``width``, ``height`` or ``size`` are less than 32;
-		- if ``x`` or ``y`` are negative;
-		- if the subarea exceeds the resized image's width and height.
+        - if ``image`` does not have exactly 3 dimensions;
+        - if ``image``'s channel size is not exactly 1;
+        - if ``width``, ``height`` or ``size`` are less than 32;
+        - if ``x`` or ``y`` are negative;
+        - if the subarea exceeds the resized image's width and height.
     :return: a tuple of:
         1.) a 3D NumPy ``ndarray`` of (1, ``height``, ``width``) shape that
             represents the resized copied version of ``image``. It has the same
@@ -137,6 +112,7 @@ def prepare_image(image: np.ndarray,
         )
 
     resized_image = _resize_image(image, width, height)
-    subarea = _subarea_image(resized_image, x, y, size)
+    subarea = resized_image[:, y:(y + size), x:(x + size)]
 
     return (resized_image, subarea)
+

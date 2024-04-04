@@ -28,7 +28,7 @@ def to_grayscale(pil_image: np.ndarray) -> np.ndarray:
     r_linear = np.delete(rgb_linear, [1, 2], axis=2)
     g_linear = np.delete(rgb_linear, [0, 2], axis=2)
     b_linear = np.delete(rgb_linear, [0, 1], axis=2)
-
+    
     # calculate linear luminance
     y_linear = 0.2126 * r_linear + 0.7152 * g_linear + 0.0722 * b_linear
 
@@ -40,7 +40,7 @@ def to_grayscale(pil_image: np.ndarray) -> np.ndarray:
 
     # shape to (1, H, W)
     y_reshaped = y.reshape((1, y.shape[0], y.shape[1]))
-
+    
     if np.issubdtype(pil_image.dtype, np.integer):
         return y_reshaped.round(0).astype(pil_image.dtype)
     return y_reshaped.astype(pil_image.dtype)
