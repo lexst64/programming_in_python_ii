@@ -38,10 +38,10 @@ def to_grayscale(pil_image: np.ndarray) -> np.ndarray:
                  12.92 * y_linear,
                  1.055 * (y_linear ** (1/2.4)) - 0.055)
 
-    # shape to (1, H, W)
-    y_reshaped = y.reshape((1, y.shape[0], y.shape[1]))
+    # shape luminance to (1, H, W) and denormalize it
+    grayscale = y.reshape((1, y.shape[0], y.shape[1])) * 255
     
     if np.issubdtype(pil_image.dtype, np.integer):
-        return y_reshaped.round(0).astype(pil_image.dtype)
-    return y_reshaped.astype(pil_image.dtype)
+        return grayscale.round(0).astype(pil_image.dtype)
+    return grayscale.astype(pil_image.dtype)
 
